@@ -108,5 +108,6 @@ export default Component.extend({
 
   didInsertElement() {
     this._super(...arguments);
+    console.log("I was called")
   },
 });
