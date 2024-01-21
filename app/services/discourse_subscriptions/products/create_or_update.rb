@@ -3,7 +3,7 @@
 module DiscourseSubscriptions
     module Products
         # TODO: to be refactored
-        class CreateOrUpdateService
+        class CreateOrUpdate
             def initialize(object)
                 @object = object
             end
