@@ -142,7 +142,7 @@ module DiscourseSubscriptions
 
       def create_or_update_product(product_data)
           fresh_data = product_data['object']
-          ::DiscourseSubscriptions::Products::CreateOrUpdateService.new(fresh_data).call!
+          ::DiscourseSubscriptions::Products::CreateOrUpdate.new(fresh_data).call!
       end
 
       def subscription_attrs(event, customer)
