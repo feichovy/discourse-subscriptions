@@ -28,12 +28,20 @@ module DiscourseSubscriptions
             metadata: {
               group_name: params[:metadata][:group_name],
               trial_period_days: params[:trial_period_days],
+              # Custom code
+              is_system_recurring: params[:is_system_recurring],
+              system_recurring_interval: params[:interval]
             },
           }
-
-          price_object[:recurring] = { interval: params[:interval] } if params[:type] == "recurring"
-
+          
+          if !params[:is_system_recurring]
+            price_object[:recurring] = { interval: params[:interval] } if params[:type] == "recurring"
+          end
+          
           plan = ::Stripe::Price.create(price_object)
+          
+          puts "CREATE FEATURES:"
+          init_features(plan[:id], params[:features])
 
           render_json_dump plan
         rescue ::Stripe::InvalidRequestError => e
@@ -53,12 +61,18 @@ module DiscourseSubscriptions
 
           interval = nil
           interval = plan[:recurring][:interval] if plan[:recurring] && plan[:recurring][:interval]
+          
+          features = PlanFeatures.where(
+                plan_id: params[:id]
+              ).order(feature_id: :asc)
+
 
           serialized =
             plan.to_h.merge(
               trial_period_days: trial_days,
               currency: plan[:currency].upcase,
               interval: interval,
+              features: features ? features : []
             )
 
           render_json_dump serialized
@@ -79,6 +93,8 @@ module DiscourseSubscriptions
                 trial_period_days: params[:trial_period_days],
               },
             )
+      
+          init_features(params[:id], params[:features])
 
           render_json_dump plan
         rescue ::Stripe::InvalidRequestError => e
@@ -87,6 +103,31 @@ module DiscourseSubscriptions
       end
 
       private
+
+      def init_features(plan_id, features)
+        # If features exist
+        if features.present? && features.values.length > 0
+          features.values.each do |item|
+            feature = PlanFeatures.where(
+                plan_id: plan_id,
+                feature_id: item["feature_id"]
+              ).first
+
+            # Update features
+            if feature.present?
+              feature.feature = item["feature"]
+              feature.save
+            else
+              # Create features
+              PlanFeatures.create(
+                plan_id: plan_id,
+                feature_id: item["feature_id"],
+                feature: item["feature"]
+              )
+            end
+          end
+        end
+      end
 
       def product_params
         { product: params[:product_id] } if params[:product_id]

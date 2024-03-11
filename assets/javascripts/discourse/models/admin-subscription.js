@@ -11,6 +11,7 @@ const AdminSubscription = EmberObject.extend({
 
   @discourseComputed("metadata")
   metadataUserExists(metadata) {
+    console.log(AdminSubscription);
     return metadata.user_id && metadata.username;
   },
 

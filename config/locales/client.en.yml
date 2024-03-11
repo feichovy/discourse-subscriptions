@@ -74,7 +74,11 @@ en:
             week: Weekly
             month: Monthly
             year: Yearly
+        internal_subscriptions: One-off payment with Recurring alerts
         payment_button: Subscribe
+        alipay_button: Pay with Alipay
+        other_payments: Pay with <b>Checkout</b>
+        wechatpay_button: Pay with WeChat Pay
         success: Thank you! Your subscription has been created.
         incomplete: The payment is incomplete. Your subscription will be updated when payment is complete.
         validate:
@@ -115,7 +119,7 @@ en:
         invalid_cardholder_state: State is required.
         invalid_cardholder_province: Province is required.
         card:
-          title: Payment
+          title: Payment Methods
         customer:
           title: Customer Details
         promo_code: Coupon
@@ -451,6 +455,8 @@ en:
             active: Active
             created_at: Created
             recurring: Recurring Plan?
+            system_recurring: One-off (with recurring reminders)?
+            system_recurring_help: Allow plan to be purchased multiple times based on a one-time checkout that will implement a system-based subscription
         coupons:
           title: Coupons
           code: Promo Code

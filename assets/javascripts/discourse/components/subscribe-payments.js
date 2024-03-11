@@ -5,6 +5,8 @@ import { observes } from "discourse-common/utils/decorators";
 import { inject as service } from "@ember/service";
 import { action } from '@ember/object';
 
+import { ajax } from "discourse/lib/ajax";
+
 export default Component.extend({
   dialog: service(),
   router: service(),
@@ -23,7 +25,7 @@ export default Component.extend({
   },
 
   @observes("selectedPlan", "plans")
-  setupButtonElement() {
+  async setupButtonElement() {
     const plan = this.plans
       .filterBy("id", this.selectedPlan)
       .get("firstObject");
@@ -55,7 +57,9 @@ export default Component.extend({
 
     this.paymentRequest.canMakePayment().then((result) => {
       if (result) {
-        this.buttonElement.mount("#payment-request-button");
+        setTimeout(() => {
+          this.buttonElement.mount("#payment-request-button");
+        }, 1000)
       } else {
         //hide the button
         // document.getElementById("payment-request-button").style.display = "none";

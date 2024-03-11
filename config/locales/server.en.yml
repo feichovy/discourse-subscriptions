@@ -1,5 +1,9 @@
 en:
   discourse_subscriptions:
+    internal_subscriptions:
+      expired: Your subscription has expired & has been marked as cancelled
+      renewal: Your subscription payment is due, click here to pay
+      renewal_url: Your %{package} subscription is due for renewal, you will receive 2 notifications with a 12-hour cooldown period to pay. If you are interested in continuing your subscription please [Pay Now](%{url})
     customer_not_found: Customer not found
     card:
       declined: Card Declined

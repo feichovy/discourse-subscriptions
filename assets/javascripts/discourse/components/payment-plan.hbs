@@ -1,4 +1,55 @@
-<DButton
+<div class="card">
+  <h2>
+    {{#if this.plan.metadata.group_name}}
+      {{ this.plan.metadata.group_name }}
+    {{else}}
+      Plan
+    {{/if}}
+  </h2>
+  <h3>{{format-currency this.plan.currency this.plan.amountDollars}}</h3>
+  <p class="price-period">
+    {{#if this.recurringPlan}}
+      {{i18n
+        (concat
+          "discourse_subscriptions.plans.interval.adverb."
+          this.plan.recurring.interval
+        )
+      }}
+    {{else}}
+      {{#if this.systemRecurring}}
+        <a href="#" class="tooltip">
+          ⓘ
+          <span class="tooltiptext">
+            {{i18n "discourse_subscriptions.plans.internal_subscriptions"}}
+          </span>
+        </a>
+        {{i18n
+          (concat
+            "discourse_subscriptions.plans.interval.adverb."
+            this.plan.metadata.system_recurring_interval
+          )  
+        }}
+      {{else}}
+        {{i18n "discourse_subscriptions.one_time_payment"}}
+      {{/if}}
+    {{/if}}
+  </p>
+
+  <ul>
+    {{#each this.plan.features as |item|}}
+      <li>{{item.feature}}</li>
+    {{/each}}
+  </ul>
+
+  <DButton
+    @action={{action "planClick"}}
+    class={{concat-class "btn-discourse-subscriptions-subscribe btn-subscribe-custom" selectedClass}}
+  >
+    Subscribe
+  </DButton>
+</div>
+
+{{!-- <DButton
   @action={{action "planClick"}}
   class={{concat-class "btn-discourse-subscriptions-subscribe" selectedClass}}
 >
@@ -11,11 +62,26 @@
         )
       }}
     {{else}}
-      {{i18n "discourse_subscriptions.one_time_payment"}}
+      {{#if this.systemRecurring}}
+        <a href="#" class="tooltip">
+          ⓘ
+          <span class="tooltiptext">
+            {{i18n "discourse_subscriptions.plans.internal_subscriptions"}}
+          </span>
+        </a>
+        {{i18n
+          (concat
+            "discourse_subscriptions.plans.interval.adverb."
+            this.plan.metadata.system_recurring_interval
+          )  
+        }}
+      {{else}}
+        {{i18n "discourse_subscriptions.one_time_payment"}}
+      {{/if}}
     {{/if}}
   </span>
 
   <span class="amount">
     {{format-currency this.plan.currency this.plan.amountDollars}}
   </span>
-</DButton>
+</DButton> --}}

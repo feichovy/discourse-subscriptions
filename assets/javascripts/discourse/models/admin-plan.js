@@ -9,6 +9,7 @@ const AdminPlan = Plan.extend({
   unit_amount: 0,
   intervals: ["day", "week", "month", "year"],
   metadata: {},
+  features: [],
 
   @discourseComputed("trial_period_days")
   parseTrialPeriodDays(trialDays) {
@@ -19,6 +20,22 @@ const AdminPlan = Plan.extend({
     }
   },
 
+  addFeatures(features) {
+    let count = 0; // Initialize the count
+
+    features.map((item, index) => {
+        // If the feature is not empty, update its feature_id and decrement count
+        if (item.feature.length) {
+            item.feature_id = count;
+            count++;
+        }
+    });
+
+    this.features = features.filter(item => item.feature.length);
+  
+    return this
+  },
+
   save() {
     const data = {
       nickname: this.nickname,
@@ -27,6 +44,8 @@ const AdminPlan = Plan.extend({
       currency: this.currency,
       trial_period_days: this.parseTrialPeriodDays,
       type: this.type,
+      is_system_recurring: this.isSystemRecurring,
+      features: this.features,
       product: this.product,
       metadata: this.metadata,
       active: this.active,
@@ -39,6 +58,7 @@ const AdminPlan = Plan.extend({
     const data = {
       nickname: this.nickname,
       trial_period_days: this.parseTrialPeriodDays,
+      features: this.features,
       metadata: this.metadata,
       active: this.active,
     };

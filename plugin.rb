@@ -65,12 +65,14 @@ load File.expand_path("app/controllers/concerns/group.rb", __dir__)
 
 after_initialize do
   ::Stripe.api_version = "2020-08-27"
-
+  
   ::Stripe.set_app_info(
     "Discourse Subscriptions",
     version: "2.8.1",
     url: "https://github.com/discourse/discourse-subscriptions",
-  )
+    )
+    
+  load File.expand_path("app/jobs/scheduled/update_internal_subscriptions.rb", __dir__)
 
   Discourse::Application.routes.append { mount ::DiscourseSubscriptions::Engine, at: "s" }
 

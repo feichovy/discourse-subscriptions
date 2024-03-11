@@ -28,6 +28,27 @@ module DiscourseSubscriptions
             end
           end
 
+          # Custom here!
+          internal_subscription =
+          InternalSubscription.where(
+            user_id: current_user[:id],
+            status: 'succeeded'
+          )
+                
+           # Custom here!
+          if internal_subscription            
+            internal_subscription.each do |internal_subscription|
+              plan = ::Stripe::Price.retrieve(internal_subscription[:product_id])
+
+              data << {
+                id: plan[:id],
+                amount: plan[:unit_amount],
+                currency: "usd",
+                created: internal_subscription[:created_at].to_i,
+              }
+            end
+          end
+          
           data = data.sort_by { |pmt| pmt[:created] }.reverse
 
           render_json_dump data

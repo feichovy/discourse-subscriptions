@@ -34,6 +34,7 @@
                   @action={{route-action "updateCard" subscription.id}}
                   @icon="far-edit"
                   class="btn no-text btn-icon"
+                  @disabled={{subscription.isSystemSubscription}}
                 />
                 <DButton
                   class="btn-danger btn no-text btn-icon"
