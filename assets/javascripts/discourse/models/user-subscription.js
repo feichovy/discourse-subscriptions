@@ -44,6 +44,11 @@ const UserSubscription = EmberObject.extend({
   @discourseComputed("plan.metadata.is_system_recurring")
   isSystemSubscription(recurring) {
     return recurring === 'true'
+  },
+
+  @discourseComputed("plan.metadata.is_system_recurring")
+  isInternallyCancelled(recurring) {
+    return this.canceled;
   }
 });
 

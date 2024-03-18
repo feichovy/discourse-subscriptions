@@ -32,7 +32,7 @@ module DiscourseSubscriptions
           internal_subscription =
           InternalSubscription.where(
             user_id: current_user[:id],
-            status: 'succeeded'
+            status: ['succeeded', 'canceled']
           )
                 
            # Custom here!

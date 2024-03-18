@@ -132,6 +132,17 @@ export default Controller.extend({
     return false;
   },
 
+  @discourseComputed("selectedPlan")
+  hasCnyEnabled(selectedPlan) {
+    const plan = this.get("model.plans")
+    .filterBy("id", selectedPlan)
+    .get("firstObject");
+
+    if (plan.unit_amount_cny) {
+      return true;
+    }
+  },
+
   actions: {
     changeCountry(country) {
       this.set("cardholderAddress.country", country);
@@ -164,17 +175,11 @@ export default Controller.extend({
         const { status, data } = await ajax(`/s/create-checkout`, {
           method: "post",
           data: {
-            plan: plan.get("id")
+            plan: plan.get("id"),
+            paymentMethod: paymentMethod
           }
         });
         
-        // If there is no trial period take them to payment screen
-        // if (!data.has_trial_period) {
-          // return;
-        // }
-        
-        // If there is a trial period show success message
-        // this._advanceSuccessfulTransaction(plan);
         window.location.replace(data.tx.url);
 
         return;

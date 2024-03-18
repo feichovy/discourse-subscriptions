@@ -13,6 +13,17 @@ const Plan = EmberObject.extend({
     },
   }),
 
+  amountCNY: computed("unit_amount_cny", {
+    get() {
+      return parseFloat(this.get("unit_amount_cny") / 100).toFixed(2);
+    },
+    set(key, value) {
+      const decimal = parseFloat(value) * 100;
+      this.set("unit_amount_cny", decimal);
+      return value;
+    },
+  }),
+
   @discourseComputed("recurring.interval", "metadata.is_system_recurring", "metadata.system_recurring_interval")
   billingInterval(interval, isSystemRecurring, systemInterval) {
     return (interval ? interval : (isSystemRecurring ? systemInterval : interval)) || "one-time";

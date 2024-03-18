@@ -40,7 +40,15 @@ module DiscourseSubscriptions
           
           plan = ::Stripe::Price.create(price_object)
           
-          puts "CREATE FEATURES:"
+          amount_cny = params[:unit_amount_cny] 
+
+          if amount_cny && (amount_cny = amount_cny.to_f) > 0
+            PlanCnyPrice.create(
+              plan_id: plan[:id],
+              unit_amount: amount_cny
+            )
+          end
+
           init_features(plan[:id], params[:features])
 
           render_json_dump plan
@@ -66,13 +74,17 @@ module DiscourseSubscriptions
                 plan_id: params[:id]
               ).order(feature_id: :asc)
 
+          amount_cny = PlanCnyPrice.where(
+            plan_id: params[:id]
+          ).first
 
           serialized =
             plan.to_h.merge(
               trial_period_days: trial_days,
               currency: plan[:currency].upcase,
               interval: interval,
-              features: features ? features : []
+              features: features ? features : [],
+              unit_amount_cny: amount_cny ? amount_cny[:unit_amount] : 0
             )
 
           render_json_dump serialized

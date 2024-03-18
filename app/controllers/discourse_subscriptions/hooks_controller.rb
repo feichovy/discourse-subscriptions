@@ -61,15 +61,24 @@ module DiscourseSubscriptions
                         next_due = (Time.now.to_i + interval)
 
                         internal_subscription.update_all status: "succeeded", active: true, next_due: next_due
-                        
-                        group = ::Group.find_by_name(event[:data][:object][:metadata][:group_name])
-                        group&.add(::User.find(event[:data][:object][:metadata][:user_id].to_i))
-                      elsif event[:data][:object][:metadata][:recurring_payment] == 'false'
-                        # Assume its a one-time payment?
+                    end
 
-                        group = ::Group.find_by_name(event[:data][:object][:metadata][:group_name])
+                    if group = ::Group.find_by_name(event[:data][:object][:metadata][:group_name])
                         group&.add(::User.find(event[:data][:object][:metadata][:user_id].to_i))
-                      end
+                    end
+              when "payment_intent.cancelled"
+                    # If user cancels from Stripe, detect it here too
+                    internal_subscription = InternalSubscription.where(
+                        plan_id: event[:data][:object][:id]
+                    )
+
+                    if internal_subscription.present? && event[:data][:object][:metadata][:recurring_payment] == 'true'
+                        internal_subscription.update_all status: "cancelled", active: false
+                    end
+                    
+                    if group = ::Group.find_by_name(event[:data][:object][:metadata][:group_name])
+                        group&.remove(::User.find(event[:data][:object][:metadata][:user_id].to_i))
+                    end
               when "customer.subscription.created"
                   ActiveRecord::Base.transaction do
                       customer = find_or_create_customer(event)

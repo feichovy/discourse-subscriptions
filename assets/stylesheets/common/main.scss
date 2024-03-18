@@ -48,10 +48,32 @@ textarea[readonly] {
   border-radius: 5px;
   margin: 3px 0px;
   padding: 8px 10px;
+
+  &:hover {
+    background-position: right center !important; 
+  }
 }
 
-.btn-other-payments:hover {
-  background-position: right center !important; 
+.btn-cny-payments {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  
+  background-image: linear-gradient(to right, #4e7fe9 0%, #25d344 100%);
+  transition: 0.5s;
+  background-size: 200% auto;
+
+  font-family: -apple-system,system-ui,BlinkMacSystemFont,SF Pro Text,Helvetica Neue,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
+  font-weight: 500;
+  font-size: .98rem;
+
+  border-radius: 5px;
+  margin: 3px 0px;
+  padding: 8px 10px;
+  
+  &:hover {
+    background-position: right center !important; 
+  }
 }
 
 .btn-alipay {

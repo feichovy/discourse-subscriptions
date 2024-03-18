@@ -72,6 +72,26 @@
     />
   </p>
 
+  {{#if model.plan.isSystemRecurring}}
+   <p>
+    <label for="amount">
+      {{i18n "discourse_subscriptions.admin.plans.plan.amount_cny"}}
+    </label>
+
+    <Input
+      class="plan-amount"
+      @type="text"
+      name="amount_cny"
+      @value={{model.plan.amountCNY}}
+      disabled={{planFieldDisabled}}
+    />
+
+    <div class="control-instructions">
+        {{i18n "discourse_subscriptions.admin.plans.plan.amount_cny_help"}}
+    </div>
+  </p>
+  {{/if}}
+
   <div>
     <div style="display: flex; align-items: center; gap: 10px;">
       <label for="features">
@@ -151,7 +171,7 @@
 
     <div class="control-instructions">
         {{i18n "discourse_subscriptions.admin.plans.plan.system_recurring_help"}}
-      </div>
+    </div>
   </p>
 
    {{#if model.plan.isSystemRecurring}}

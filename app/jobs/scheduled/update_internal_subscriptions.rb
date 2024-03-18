@@ -96,6 +96,31 @@ module ::Jobs
             end
           end
         else
+          # If subscription is cancelled
+          if is_recurring_plan && internal_subscription[:status] == 'canceled'
+            next_due = internal_subscription[:next_due].to_i
+            # If time is due for next subscription
+            if next_due <= now
+              internal_subscription[:active] = false
+              internal_subscription.save
+
+              # Remove groups
+              group = ::Group.find_by_name(plan[:metadata][:group_name])
+              group&.remove(user) if group
+
+              puts "#{user.username}'s subscription was cancelled and they have been alerted"
+            
+              # Alert the user that the subscription is cancelled
+              PostCreator.create(
+                  Discourse.system_user,
+                  target_usernames: user[:username],
+                  archetype: Archetype.private_message,
+                  subtype: TopicSubtype.system_message,
+                  title: I18n.t("discourse_subscriptions.internal_subscriptions.expired")
+              )
+            end
+          end
+
           # If status of subscription is in requires_action
           if is_recurring_plan && internal_subscription[:status] == 'created' && internal_subscription[:last_notification].present?
             # Then assume that we are waiting for the user to make a payment

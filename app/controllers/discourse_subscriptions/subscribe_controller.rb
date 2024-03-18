@@ -56,8 +56,9 @@ module DiscourseSubscriptions
     end
 
     def create_checkout
-      params.require(%i[plan])
+      params.require(%i[plan paymentMethod])
       begin
+        payment_method = params[:paymentMethod]
         plan = ::Stripe::Price.retrieve(params[:plan])
         # group = plan_group(plan)
         recurring_plan = plan[:metadata][:is_system_recurring] == "true"
@@ -66,7 +67,12 @@ module DiscourseSubscriptions
           group_name: plan[:metadata][:group_name],
           system_recurring_interval: plan[:metadata][:system_recurring_interval]
         }.merge!(metadata_user)
-        
+
+        currency = payment_method == 'cny' ? 'cny' : SiteSetting.discourse_subscriptions_currency.downcase
+        unit_amount = payment_method == 'cny' ? PlanCnyPrice.where(plan_id: plan[:id]).first[:unit_amount].to_i : (plan["unit_amount"] < 1 ? 100 : plan["unit_amount"])
+        payment_method_options = payment_method == 'cny' ? { wechat_pay: { client: 'web' } } : {}
+        payment_method_types = payment_method == 'cny' ? ['wechat_pay', 'alipay'] : ['card', 'link']
+
         payment_params = {
           success_url: "#{Discourse.base_url}/s?t=success",
           cancel_url: "#{Discourse.base_url}/s?t=cancel",
@@ -74,8 +80,8 @@ module DiscourseSubscriptions
           line_items: [
             {
               price_data: {
-                currency: SiteSetting.discourse_subscriptions_currency.downcase,
-                unit_amount: (plan["unit_amount"] < 1 ? 100 : plan["unit_amount"]),
+                currency: currency,
+                unit_amount: unit_amount,
                 product_data: {
                   name: (plan["nickname"] && plan["nickname"].length > 0) ? plan["nickname"] : "Plan",
                   description: "A 6DO Payment"
@@ -84,12 +90,15 @@ module DiscourseSubscriptions
               quantity: 1,
             },
           ],
+          payment_method_options: payment_method_options,
+          payment_method_types: payment_method_types,
           payment_intent_data: {
             metadata: metadata
           },
           mode: 'payment',
         }
 
+        
         if recurring_plan
           metadata.merge!(
             recurring_payment: 'true'
@@ -258,8 +267,12 @@ module DiscourseSubscriptions
       # Fetch PlanFeatures for the current plan_id
       features = PlanFeatures.where(plan_id: plan[:id]).order(feature_id: :asc)
 
+      # CNY Price
+      amount_cny = PlanCnyPrice.where(plan_id: plan[:id]).first
+
       # Add features to the plan hash
       plan_hash[:features] = features.map { |feature| feature.attributes }
+      plan_hash[:unit_amount_cny] = amount_cny ? amount_cny[:unit_amount] : 0
 
       plan_hash
     end
