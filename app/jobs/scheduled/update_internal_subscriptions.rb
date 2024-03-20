@@ -62,13 +62,32 @@ module ::Jobs
                   quantity: 1,
                 },
               ],
+              payment_method_types: ['card', 'link'],
               payment_intent_data: {
                 metadata: metadata
               },
               mode: 'payment',
             }
 
+            payment_params_cny = payment_params.merge({
+              payment_method_options: {
+                wechat_pay: {
+                  client: 'web'
+                }
+              },
+              payment_method_types: ['wechat_pay', 'alipay'],
+              line_items: [
+                {
+                  price_data: {
+                    currency: currency,
+                    unit_amount: unit_amount,
+                  }
+                }
+              ]
+            })
+
             payment_intent = ::Stripe::Checkout::Session.create(payment_params)
+            payment_intent_cny = ::Stripe::Checkout::Session.create(payment_params_cny)
 
             if is_recurring_plan
               metadata.merge!(recurring_payment: is_recurring_plan)
@@ -82,11 +101,12 @@ module ::Jobs
                   title: I18n.t("discourse_subscriptions.internal_subscriptions.renewal"),
                   raw: I18n.t("discourse_subscriptions.internal_subscriptions.renewal_url", {
                     package: plan[:nickname],
-                    url: payment_intent[:url]
+                    url: payment_intent[:url],
+                    url_cny: payment_intent_cny[:url]
                   })
               )
               
-              internal_subscription[:plan_id] = payment_intent[:payment_intent]
+              internal_subscription[:plan_id] = "#{payment_intent[:payment_intent]},#{payment_intent[:payment_intent_cny]}"
               internal_subscription[:status] = "created"
               internal_subscription[:last_notification] = Time.now.to_i              
                 

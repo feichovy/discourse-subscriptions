@@ -35,9 +35,10 @@ module DiscourseSubscriptions
           
           case event[:type]
               when "payment_intent.requires_action"
-                      internal_subscription = InternalSubscription.where(
-                        plan_id: event[:data][:object][:id]
-                      )
+                    #   internal_subscription = InternalSubscription.where(
+                    #     plan_id: event[:data][:object][:id]
+                    #   )
+                      internal_subscription = InternalSubscription.where("plan_id LIKE ?", "%#{event[:data][:object][:id]}%")
 
                       if internal_subscription && event[:data][:object][:metadata][:recurring_payment] == 'true'
                         internal_subscription.update_all status: "cancelled", active: false
@@ -46,9 +47,10 @@ module DiscourseSubscriptions
                       puts "Payment Succeeded:"
                       puts event
                 
-                      internal_subscription = InternalSubscription.where(
-                        plan_id: event[:data][:object][:id]
-                      )
+                    #   internal_subscription = InternalSubscription.where(
+                    #     plan_id: event[:data][:object][:id]
+                    #   )
+                      internal_subscription = InternalSubscription.where("plan_id LIKE ?", "%#{event[:data][:object][:id]}%")
 
                       if internal_subscription.present? && event[:data][:object][:metadata][:recurring_payment] == 'true'
                         # Next Due Interval
@@ -68,9 +70,11 @@ module DiscourseSubscriptions
                     end
               when "payment_intent.cancelled"
                     # If user cancels from Stripe, detect it here too
-                    internal_subscription = InternalSubscription.where(
-                        plan_id: event[:data][:object][:id]
-                    )
+                    # internal_subscription = InternalSubscription.where(
+                    #     plan_id: event[:data][:object][:id]
+                    # )
+
+                    internal_subscription = InternalSubscription.where("plan_id LIKE ?", "%#{event[:data][:object][:id]}%")
 
                     if internal_subscription.present? && event[:data][:object][:metadata][:recurring_payment] == 'true'
                         internal_subscription.update_all status: "cancelled", active: false

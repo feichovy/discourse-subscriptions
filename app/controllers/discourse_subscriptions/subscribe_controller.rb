@@ -84,7 +84,7 @@ module DiscourseSubscriptions
                 unit_amount: unit_amount,
                 product_data: {
                   name: (plan["nickname"] && plan["nickname"].length > 0) ? plan["nickname"] : "Plan",
-                  description: "A 6DO Payment"
+                  description: Discourse.base_url
                 }
               },
               quantity: 1,
@@ -97,7 +97,6 @@ module DiscourseSubscriptions
           },
           mode: 'payment',
         }
-
         
         if recurring_plan
           metadata.merge!(
