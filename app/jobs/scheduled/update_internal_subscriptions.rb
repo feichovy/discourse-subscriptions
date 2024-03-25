@@ -24,8 +24,7 @@ module ::Jobs
       internal_subs = ::DiscourseSubscriptions::InternalSubscription.where(active: true)
 
       internal_subs.each do |internal_subscription|
-
-        payment_intent = ::Stripe::PaymentIntent.retrieve(internal_subscription[:plan_id].split(",").last)
+        payment_intent = ::Stripe::PaymentIntent.retrieve(internal_subscription[:plan_id])
         payment_intent_metadata = payment_intent[:metadata]
         user = User.find_by(id: internal_subscription.user_id)
 
