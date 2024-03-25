@@ -62,7 +62,7 @@ module DiscourseSubscriptions
                         
                         next_due = (Time.now.to_i + interval)
 
-                        internal_subscription.update_all status: "succeeded", active: true, next_due: next_due
+                        internal_subscription.update_all status: "succeeded", active: true, next_due: next_due, last_notification: nil
                     end
 
                     if group = ::Group.find_by_name(event[:data][:object][:metadata][:group_name])

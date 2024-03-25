@@ -69,25 +69,38 @@ module ::Jobs
               mode: 'payment',
             }
 
-            payment_params_cny = payment_params.merge({
-              payment_method_options: {
-                wechat_pay: {
-                  client: 'web'
-                }
-              },
-              payment_method_types: ['wechat_pay', 'alipay'],
-              line_items: [
-                {
-                  price_data: {
-                    currency: currency,
-                    unit_amount: unit_amount,
+            cny_price = ::DiscourseSubscriptions::PlanCnyPrice.where(plan_id: plan[:id]).first
+            payment_intent_cny = false
+
+            if cny_price.present?
+              cny_price = cny_price[:unit_amount].to_i
+
+              payment_params_cny = payment_params.merge({
+                payment_method_options: {
+                  wechat_pay: {
+                    client: 'web'
                   }
-                }
-              ]
-            })
+                },
+                payment_method_types: ['wechat_pay', 'alipay'],
+                line_items: [
+                  {
+                    price_data: {
+                      currency: 'cny',
+                      unit_amount: cny_price,
+                      product_data: {
+                        name: (plan["nickname"] && plan["nickname"].length > 0) ? plan["nickname"] : "Plan",
+                        description: Discourse.base_url
+                      }
+                    },
+                    quantity: 1
+                  }
+                ]
+              })
+
+              payment_intent_cny = ::Stripe::Checkout::Session.create(payment_params_cny)
+            end
 
             payment_intent = ::Stripe::Checkout::Session.create(payment_params)
-            payment_intent_cny = ::Stripe::Checkout::Session.create(payment_params_cny)
 
             if is_recurring_plan
               metadata.merge!(recurring_payment: is_recurring_plan)
@@ -102,11 +115,11 @@ module ::Jobs
                   raw: I18n.t("discourse_subscriptions.internal_subscriptions.renewal_url", {
                     package: plan[:nickname],
                     url: payment_intent[:url],
-                    url_cny: payment_intent_cny[:url]
+                    url_cny: payment_intent_cny ? payment_intent_cny[:url] : '#'
                   })
               )
               
-              internal_subscription[:plan_id] = "#{payment_intent[:payment_intent]},#{payment_intent[:payment_intent_cny]}"
+              internal_subscription[:plan_id] = payment_intent_cny ? "#{payment_intent[:payment_intent]},#{payment_intent_cny[:payment_intent]}" : "#{payment_intent[:payment_intent]}"
               internal_subscription[:status] = "created"
               internal_subscription[:last_notification] = Time.now.to_i              
                 
