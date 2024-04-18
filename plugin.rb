@@ -4,8 +4,8 @@
 # about: Allows admins to sell subscriptions to site content.
 # meta_topic_id: 140818
 # version: 2.8.1
-# url: https://github.com/discourse/discourse-subscriptions
-# authors: Rimian Perkins, Justin DiRose
+# url: https://github.com/6doworld/discourse-subscriptions
+# authors: Rimian Perkins, Justin DiRose, Blockchain Advisors
 
 enabled_site_setting :discourse_subscriptions_enabled
 
