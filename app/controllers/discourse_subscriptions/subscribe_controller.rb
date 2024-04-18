@@ -50,6 +50,81 @@ module DiscourseSubscriptions
 
         render_json_dump response
       rescue ::Stripe::InvalidRequestError => e
+        puts "Stripe Error: #{e.message}"
+        render_json_error e.message
+      end
+    end
+
+    def create_checkout
+      params.require(%i[plan paymentMethod])
+      begin
+        payment_method = params[:paymentMethod]
+        plan = ::Stripe::Price.retrieve(params[:plan])
+        # group = plan_group(plan)
+        recurring_plan = plan[:metadata][:is_system_recurring] == "true"
+        metadata = {
+          recurring_payment: false,
+          group_name: plan[:metadata][:group_name],
+          system_recurring_interval: plan[:metadata][:system_recurring_interval]
+        }.merge!(metadata_user)
+
+        currency = payment_method == 'cny' ? 'cny' : SiteSetting.discourse_subscriptions_currency.downcase
+        unit_amount = payment_method == 'cny' ? PlanCnyPrice.where(plan_id: plan[:id]).first[:unit_amount].to_i : (plan["unit_amount"] < 1 ? 100 : plan["unit_amount"])
+        payment_method_options = payment_method == 'cny' ? { wechat_pay: { client: 'web' } } : {}
+        payment_method_types = payment_method == 'cny' ? ['wechat_pay', 'alipay'] : ['card', 'link']
+
+        payment_params = {
+          success_url: "#{Discourse.base_url}/s?t=success",
+          cancel_url: "#{Discourse.base_url}/s?t=cancel",
+          allow_promotion_codes: true,
+          line_items: [
+            {
+              price_data: {
+                currency: currency,
+                unit_amount: unit_amount,
+                product_data: {
+                  name: (plan["nickname"] && plan["nickname"].length > 0) ? plan["nickname"] : "Plan",
+                  description: Discourse.base_url
+                }
+              },
+              quantity: 1,
+            },
+          ],
+          payment_method_options: payment_method_options,
+          payment_method_types: payment_method_types,
+          payment_intent_data: {
+            metadata: metadata
+          },
+          mode: 'payment',
+        }
+        
+        if recurring_plan
+          metadata.merge!(
+            recurring_payment: 'true'
+          )
+        end
+
+        payment_intent = ::Stripe::Checkout::Session.create(payment_params)
+
+        if recurring_plan
+          # Create internal subscription (default: active)
+          InternalSubscription.create!({
+            product_id: plan[:id],
+            plan_id: payment_intent[:payment_intent],
+            user_id: current_user[:id],
+            status: payment_intent[:status]
+          })
+        end
+
+        render json: {
+          status: true,
+          data: {
+            tx: payment_intent,
+            is_recurring_plan: recurring_plan
+          }
+        }
+      rescue ::Stripe::StripeError => e
+        puts "Stripe Error: #{e.message}"
         render_json_error e.message
       end
     end
@@ -157,11 +232,18 @@ module DiscourseSubscriptions
     private
 
     def serialize_product(product)
+      internal_subscription =
+            InternalSubscription.where(
+              user_id: current_user[:id],
+              status: 'succeeded',
+              active: true
+            ).first
+      
       {
         id: product[:id],
         name: product[:name],
         description: PrettyText.cook(product[:metadata][:description]),
-        subscribed: current_user_products.include?(product[:id]),
+        subscribed: internal_subscription ? true : current_user_products.include?(product[:id]),
         repurchaseable: product[:metadata][:repurchaseable],
       }
     end
@@ -174,8 +256,24 @@ module DiscourseSubscriptions
 
     def serialize_plans(plans)
       plans[:data]
-        .map { |plan| plan.to_h.slice(:id, :unit_amount, :currency, :type, :recurring) }
+        .map { |plan| serialize_plan(plan) }
         .sort_by { |plan| plan[:amount] }
+    end
+
+    def serialize_plan(plan)
+      plan_hash = plan.to_h.slice(:id, :unit_amount, :currency, :type, :recurring, :metadata)
+
+      # Fetch PlanFeatures for the current plan_id
+      features = PlanFeatures.where(plan_id: plan[:id]).order(feature_id: :asc)
+
+      # CNY Price
+      amount_cny = PlanCnyPrice.where(plan_id: plan[:id]).first
+
+      # Add features to the plan hash
+      plan_hash[:features] = features.map { |feature| feature.attributes }
+      plan_hash[:unit_amount_cny] = amount_cny ? amount_cny[:unit_amount] : 0
+
+      plan_hash
     end
 
     def find_or_create_customer(source, cardholder_name = nil, cardholder_address = nil)

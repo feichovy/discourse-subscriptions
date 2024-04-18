@@ -37,6 +37,31 @@ module DiscourseSubscriptions
             end
           end
 
+          # Custom here!
+          internal_subscription =
+            InternalSubscription.where(
+              user_id: current_user[:id],
+              status: ['succeeded', 'canceled'],
+              active: true
+            )
+                    
+          # Custom here!
+          if internal_subscription            
+            internal_subscription.each do |internal_subscription|
+              plan = ::Stripe::Price.retrieve(internal_subscription[:product_id])
+              product = ::Stripe::Product.retrieve(plan[:product])
+
+              subscriptions << {
+                id: "internal_#{internal_subscription[:id]}",
+                plan: plan,
+                product: product,
+                current_period_end: internal_subscription[:next_due],
+                created: internal_subscription[:created_at].to_i,
+                status: internal_subscription[:active] ? internal_subscription[:status] == 'canceled' ? 'canceled' : 'active' : 'inactive'
+              }
+            end
+          end
+
           render_json_dump subscriptions
         rescue ::Stripe::InvalidRequestError => e
           render_json_error e.message
@@ -44,20 +69,48 @@ module DiscourseSubscriptions
       end
 
       def destroy
-        # we cancel but don't remove until the end of the period
-        # full removal is done via webhooks
         begin
-          subscription = ::Stripe::Subscription.update(params[:id], { cancel_at_period_end: true })
+          if params[:id].start_with?("internal_")
+            # Internal subscription logic
+            internal_id = params[:id][9..-1].to_i
+            internal_subscription = InternalSubscription.find_by(id: internal_id)
+            
+            if internal_subscription
+              # Update internal subscription status
+              internal_subscription.update(status: 'canceled')
+              
+              plan = ::Stripe::Price.retrieve(internal_subscription[:product_id])
+              product = ::Stripe::Product.retrieve(plan[:product])
 
-          if subscription
-            render_json_dump subscription
+              # Construct JSON data for internal subscription
+              data = {
+                id: "internal_#{internal_id}",
+                plan: plan,
+                product: product,
+                current_period_end: internal_subscription[:next_due],
+                created: internal_subscription[:created_at].to_i,
+                status: 'canceled'
+              }
+              
+              render_json_dump(data)
+            else
+              render_json_error("Internal subscription not found")
+            end
           else
-            render_json_error I18n.t("discourse_subscriptions.customer_not_found")
+            # Stripe subscription logic
+            subscription = ::Stripe::Subscription.update(params[:id], { cancel_at_period_end: true })
+            
+            if subscription
+              render_json_dump(subscription)
+            else
+              render_json_error(I18n.t("discourse_subscriptions.customer_not_found"))
+            end
           end
         rescue ::Stripe::InvalidRequestError => e
-          render_json_error e.message
+          render_json_error(e.message)
         end
       end
+
 
       def update
         params.require(:payment_method)

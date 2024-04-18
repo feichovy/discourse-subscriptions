@@ -7,6 +7,9 @@ import I18n from "I18n";
 import Subscription from "discourse/plugins/discourse-subscriptions/discourse/models/subscription";
 import Transaction from "discourse/plugins/discourse-subscriptions/discourse/models/transaction";
 
+import { ajax } from "discourse/lib/ajax";
+
+
 export default Controller.extend({
   dialog: service(),
   router: service(),
@@ -36,14 +39,15 @@ export default Controller.extend({
 
     this.set("isCountryUS", this.cardholderAddress.country === "US");
     this.set("isCountryCA", this.cardholderAddress.country === "CA");
+    this.set("customPaymentMethod", "");
   },
 
   alert(path) {
     this.dialog.alert(I18n.t(`discourse_subscriptions.${path}`));
   },
 
-  @discourseComputed("model.product.repurchaseable", "model.product.subscribed")
-  canPurchase(repurchaseable, subscribed) {
+  @discourseComputed("model.product.repurchaseable", "model.product.subscribed", "model")
+  canPurchase(repurchaseable, subscribed, model) {
     if (!repurchaseable && subscribed) {
       return false;
     }
@@ -108,6 +112,37 @@ export default Controller.extend({
     );
   },
 
+  @discourseComputed("selectedPlan")
+  isSystemRecurring(selectedPlan) {
+    const plan = this.get("model.plans")
+    .filterBy("id", selectedPlan)
+    .get("firstObject");
+    
+    if (plan) {
+      if (plan.get("type") === "one_time") {
+        return true;
+      }
+
+      const meta = plan.get("metadata");
+        if (meta['is_system_recurring'] === 'true') {
+          return true;
+        }
+    }
+    
+    return false;
+  },
+
+  @discourseComputed("selectedPlan")
+  hasCnyEnabled(selectedPlan) {
+    const plan = this.get("model.plans")
+    .filterBy("id", selectedPlan)
+    .get("firstObject");
+
+    if (plan.unit_amount_cny) {
+      return true;
+    }
+  },
+
   actions: {
     changeCountry(country) {
       this.set("cardholderAddress.country", country);
@@ -119,7 +154,7 @@ export default Controller.extend({
       this.set("cardholderAddress.state", stateOrProvince);
     },
 
-    stripePaymentHandler() {
+    async stripePaymentHandler(paymentMethod='') {
       this.set("loading", true);
       const plan = this.get("model.plans")
         .filterBy("id", this.selectedPlan)
@@ -130,6 +165,23 @@ export default Controller.extend({
       if (!plan) {
         this.alert("plans.validate.payment_options.required");
         this.set("loading", false);
+        return;
+      }
+
+
+      if (paymentMethod.length) {
+        console.log(plan)
+
+        const { status, data } = await ajax(`/s/create-checkout`, {
+          method: "post",
+          data: {
+            plan: plan.get("id"),
+            paymentMethod: paymentMethod
+          }
+        });
+        
+        window.location.replace(data.tx.url);
+
         return;
       }
 

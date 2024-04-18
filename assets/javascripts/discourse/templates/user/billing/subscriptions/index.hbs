@@ -34,11 +34,13 @@
                   @action={{route-action "updateCard" subscription.id}}
                   @icon="far-edit"
                   class="btn no-text btn-icon"
+                  @disabled={{subscription.isSystemSubscription}}
                 />
                 <DButton
                   class="btn-danger btn no-text btn-icon"
                   @icon="trash-alt"
                   @disabled={{subscription.canceled_at}}
+                  @disabled={{subscription.isInternallyCancelled}}
                   @action={{route-action "cancelSubscription" subscription}}
                 />
               {{/if}}

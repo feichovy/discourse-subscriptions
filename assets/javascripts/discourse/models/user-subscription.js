@@ -40,6 +40,16 @@ const UserSubscription = EmberObject.extend({
       method: "delete",
     }).then((result) => UserSubscription.create(result));
   },
+
+  @discourseComputed("plan.metadata.is_system_recurring")
+  isSystemSubscription(recurring) {
+    return recurring === 'true'
+  },
+
+  @discourseComputed("plan.metadata.is_system_recurring")
+  isInternallyCancelled(recurring) {
+    return this.canceled;
+  }
 });
 
 UserSubscription.reopenClass({

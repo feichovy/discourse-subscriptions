@@ -1,5 +1,13 @@
 # frozen_string_literal: true
 
+# Intervals in Seconds
+INTERVALS = {
+  "day" => 86400,
+  "week" => 604800,
+  "month" => 2629800,
+  "year" => 31557600,
+}
+
 module DiscourseSubscriptions
   class HooksController < ::ApplicationController
       include DiscourseSubscriptions::Group
@@ -24,8 +32,57 @@ module DiscourseSubscriptions
           rescue ::Stripe::SignatureVerificationError => e
               return render_json_error e.message
           end
-
+          
           case event[:type]
+              when "payment_intent.requires_action"
+                    #   internal_subscription = InternalSubscription.where(
+                    #     plan_id: event[:data][:object][:id]
+                    #   )
+                      internal_subscription = InternalSubscription.where("plan_id LIKE ?", "%#{event[:data][:object][:id]}%")
+
+                      if internal_subscription && event[:data][:object][:metadata][:recurring_payment] == 'true'
+                        internal_subscription.update_all status: "cancelled", active: false
+                      end
+              when "payment_intent.succeeded"
+                      puts "Payment Succeeded:"
+                      puts event
+                
+                    #   internal_subscription = InternalSubscription.where(
+                    #     plan_id: event[:data][:object][:id]
+                    #   )
+                      internal_subscription = InternalSubscription.where("plan_id LIKE ?", "%#{event[:data][:object][:id]}%")
+
+                      if internal_subscription.present? && event[:data][:object][:metadata][:recurring_payment] == 'true'
+                        # Next Due Interval
+                        
+                        interval = INTERVALS[event[:data][:object][:metadata][:system_recurring_interval]]
+                        puts "Interval:"
+                        puts interval
+                        puts event[:data][:object][:metadata][:system_recurring_interval]
+                        
+                        next_due = (Time.now.to_i + interval)
+
+                        internal_subscription.update_all status: "succeeded", active: true, next_due: next_due, last_notification: nil
+                    end
+
+                    if group = ::Group.find_by_name(event[:data][:object][:metadata][:group_name])
+                        group&.add(::User.find(event[:data][:object][:metadata][:user_id].to_i))
+                    end
+              when "payment_intent.cancelled"
+                    # If user cancels from Stripe, detect it here too
+                    # internal_subscription = InternalSubscription.where(
+                    #     plan_id: event[:data][:object][:id]
+                    # )
+
+                    internal_subscription = InternalSubscription.where("plan_id LIKE ?", "%#{event[:data][:object][:id]}%")
+
+                    if internal_subscription.present? && event[:data][:object][:metadata][:recurring_payment] == 'true'
+                        internal_subscription.update_all status: "cancelled", active: false
+                    end
+                    
+                    if group = ::Group.find_by_name(event[:data][:object][:metadata][:group_name])
+                        group&.remove(::User.find(event[:data][:object][:metadata][:user_id].to_i))
+                    end
               when "customer.subscription.created"
                   ActiveRecord::Base.transaction do
                       customer = find_or_create_customer(event)
@@ -98,7 +155,7 @@ module DiscourseSubscriptions
 
       def create_or_update_product(product_data)
           fresh_data = product_data['object']
-          ::DiscourseSubscriptions::Products::CreateOrUpdateService.new(fresh_data).call!
+          ::DiscourseSubscriptions::Products::CreateOrUpdate.new(fresh_data).call!
       end
 
       def subscription_attrs(event, customer)

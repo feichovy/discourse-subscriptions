@@ -32,6 +32,79 @@ textarea[readonly] {
   }
 }
 
+.btn-other-payments {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  
+  background-image: linear-gradient(to right, #4e7fe9 0%, #9966FF 51%, #11EFE3 100%);
+  transition: 0.5s;
+  background-size: 200% auto;
+
+  font-family: -apple-system,system-ui,BlinkMacSystemFont,SF Pro Text,Helvetica Neue,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
+  font-weight: 500;
+  font-size: .98rem;
+
+  border-radius: 5px;
+  margin: 3px 0px;
+  padding: 8px 10px;
+
+  &:hover {
+    background-position: right center !important; 
+  }
+}
+
+.btn-cny-payments {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  
+  background-image: linear-gradient(to right, #4e7fe9 0%, #25d344 100%);
+  transition: 0.5s;
+  background-size: 200% auto;
+
+  font-family: -apple-system,system-ui,BlinkMacSystemFont,SF Pro Text,Helvetica Neue,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
+  font-weight: 500;
+  font-size: .98rem;
+
+  border-radius: 5px;
+  margin: 3px 0px;
+  padding: 8px 10px;
+  
+  &:hover {
+    background-position: right center !important; 
+  }
+}
+
+.btn-alipay {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  
+  background: #006efe;
+  border-radius: 5px;
+  margin: 2px 0px;
+  padding: 10px;
+}
+
+.btn-alipay:hover {
+  background: #3687f1 !important;
+}
+
+.btn-wechatpay {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  background: #25d344;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.btn-wechatpay:hover {
+  background: #3ae259 !important;
+}
+
 .plan-amount {
   position: relative;
   top: 2px;
@@ -74,4 +147,63 @@ table.discourse-subscriptions-user-table {
 
 .discourse-subscriptions-confirmation-billing {
   margin-right: 40px;
+}
+
+/* Tooltip container */
+.tooltip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: max-content;
+  background-color: var(--secondary-high);
+  color: #fff;
+  text-align: center;
+  padding: 5px 5px;
+  border-radius: 6px;
+
+  /* Position the tooltip text */
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;  /* Place the tooltip text at the bottom */
+  left: 50%;
+  transform: translateX(-50%);
+  // margin-left: -100%;  /* Use half of the width to center the tooltip text */
+
+  /* Fade in tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+@media screen and (max-width: 600px) {
+  .tooltip .tooltiptext {
+    transform: translateX(-5%);
+  }
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+button.btn-discourse-subscriptions-subscribe:hover > .interval > .tooltip {
+  color: rgb(255, 255, 255) !important;
+}
+
+.payment-list img {
+  height: auto;
+  width: 236px;
+  margin-left: -14px;
+  margin-top: -14px;
 }

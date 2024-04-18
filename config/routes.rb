@@ -25,6 +25,7 @@ DiscourseSubscriptions::Engine.routes.draw do
   get ".json" => "subscribe#index"
   get "/contributors" => "subscribe#contributors"
   get "/:id" => "subscribe#show"
+  post "/create-checkout" => "subscribe#create_checkout"
   post "/create" => "subscribe#create"
   post "/finalize" => "subscribe#finalize"
 

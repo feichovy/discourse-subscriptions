@@ -74,7 +74,11 @@ en:
             week: Weekly
             month: Monthly
             year: Yearly
+        internal_subscriptions: One-off payment with Recurring alerts
         payment_button: Subscribe
+        alipay_button: Pay with Alipay
+        other_payments: Pay with <b>Checkout</b>
+        other_cny_payments: Pay with <b>Alipay</b>
         success: Thank you! Your subscription has been created.
         incomplete: The payment is incomplete. Your subscription will be updated when payment is complete.
         validate:
@@ -115,7 +119,7 @@ en:
         invalid_cardholder_state: State is required.
         invalid_cardholder_province: Province is required.
         card:
-          title: Payment
+          title: Payment Methods
         customer:
           title: Customer Details
         promo_code: Coupon
@@ -444,6 +448,7 @@ en:
             product: Product
             interval: Billing Interval
             amount: Amount
+            amount_cny: Amount (CNY)
             trial: Trial Period Days
             trial_help: Subscriptions to this plan will automatically start with a free trial of this length
             group: User Group
@@ -451,6 +456,9 @@ en:
             active: Active
             created_at: Created
             recurring: Recurring Plan?
+            system_recurring: One-off (with recurring reminders)?
+            system_recurring_help: Allow plan to be purchased multiple times based on a one-time checkout that will implement a system-based subscription
+            amount_cny_help: If amount is greater than zero, CNY payment methods will appear when a user subscribes
         coupons:
           title: Coupons
           code: Promo Code

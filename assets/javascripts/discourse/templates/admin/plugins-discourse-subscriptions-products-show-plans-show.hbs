@@ -72,6 +72,60 @@
     />
   </p>
 
+  {{#if model.plan.isSystemRecurring}}
+   <p>
+    <label for="amount">
+      {{i18n "discourse_subscriptions.admin.plans.plan.amount_cny"}}
+    </label>
+
+    <Input
+      class="plan-amount"
+      @type="text"
+      name="amount_cny"
+      @value={{model.plan.amountCNY}}
+      disabled={{planFieldDisabled}}
+    />
+
+    <div class="control-instructions">
+        {{i18n "discourse_subscriptions.admin.plans.plan.amount_cny_help"}}
+    </div>
+  </p>
+  {{/if}}
+
+  <div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <label for="features">
+        Plan Features
+      </label>
+      <DButton
+          @class="btn-primary"
+          @action={{action "addFeature"}}
+        >
+          Add
+        </DButton>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px;"> 
+      {{#each featureList as |item index|}}
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <Input
+            data-id={{index}}
+            @type="text"
+            placeholder="Enter a feature"
+            @value={{item.feature}}
+            {{on "change" (action "updateText")}}
+          />
+          <DButton
+            @class="btn-danger"
+            @action={{action "removeFeature" index}}
+          >
+            Delete
+          </DButton>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+
   <p>
     <label for="recurring">
       {{i18n "discourse_subscriptions.admin.plans.plan.recurring"}}
@@ -93,6 +147,51 @@
       />
     {{/if}}
   </p>
+
+  <p>
+    <label for="system_recurring">
+      {{i18n "discourse_subscriptions.admin.plans.plan.system_recurring"}}
+    </label>
+
+    {{#if planFieldDisabled}}
+      <Input
+        @type="checkbox"
+        name="system_recurring"
+        @checked={{model.plan.metadata.is_system_recurring}}
+        disabled={{true}}
+      />
+    {{else}}
+      <Input
+        @type="checkbox"
+        name="system_recurring"
+        @checked={{model.plan.isSystemRecurring}}
+        {{on "change" (action "changeSystemRecurring")}}
+      />
+    {{/if}}
+
+    <div class="control-instructions">
+        {{i18n "discourse_subscriptions.admin.plans.plan.system_recurring_help"}}
+    </div>
+  </p>
+
+   {{#if model.plan.isSystemRecurring}}
+    <p>
+      <label for="interval">
+        {{i18n "discourse_subscriptions.admin.plans.plan.interval"}}
+      </label>
+
+      {{#if planFieldDisabled}}
+        <Input disabled={{true}} @value={{selectedInterval}} />
+      {{else}}
+        <ComboBox
+          @valueProperty="name"
+          @content={{availableIntervals}}
+          @value={{selectedInterval}}
+          @onChange={{action (mut selectedInterval)}}
+        />
+      {{/if}}
+    </p>
+  {{/if}}
 
   {{#if model.plan.isRecurring}}
     <p>

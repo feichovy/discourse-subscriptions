@@ -12,15 +12,32 @@ const Plan = EmberObject.extend({
       return value;
     },
   }),
-  @discourseComputed("recurring.interval")
-  billingInterval(interval) {
-    return interval || "one-time";
+
+  amountCNY: computed("unit_amount_cny", {
+    get() {
+      return parseFloat(this.get("unit_amount_cny") / 100).toFixed(2);
+    },
+    set(key, value) {
+      const decimal = parseFloat(value) * 100;
+      this.set("unit_amount_cny", decimal);
+      return value;
+    },
+  }),
+
+  @discourseComputed("recurring.interval", "metadata.is_system_recurring", "metadata.system_recurring_interval")
+  billingInterval(interval, isSystemRecurring, systemInterval) {
+    return (interval ? interval : (isSystemRecurring ? systemInterval : interval)) || "one-time";
   },
 
   @discourseComputed("amountDollars", "currency", "billingInterval")
   subscriptionRate(amountDollars, currency, interval) {
     return `${amountDollars} ${currency.toUpperCase()} / ${interval}`;
   },
+
+  @discourseComputed("features")
+  getFeatures(features) {
+    return features;
+  }
 });
 
 export default Plan;

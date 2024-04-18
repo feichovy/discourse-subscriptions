@@ -16,8 +16,17 @@ export default Component.extend({
     return type === RECURRING;
   },
 
+  @discourseComputed("plan.metadata.is_system_recurring")
+  systemRecurring(type) {
+    return type === 'true';
+  },
+
   actions: {
     planClick() {
+      setTimeout(() => {
+        document.querySelector(".payment-list").scrollIntoView();
+      }, 100)
+
       this.clickPlan(this.plan);
       return false;
     },
