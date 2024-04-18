@@ -78,8 +78,7 @@ en:
         payment_button: Subscribe
         alipay_button: Pay with Alipay
         other_payments: Pay with <b>Checkout</b>
-        other_cny_payments: Pay with <b>Alipay & WeChat Pay</b>
-        wechatpay_button: Pay with WeChat Pay
+        other_cny_payments: Pay with <b>Alipay</b>
         success: Thank you! Your subscription has been created.
         incomplete: The payment is incomplete. Your subscription will be updated when payment is complete.
         validate:
