@@ -64,7 +64,7 @@ load File.expand_path("app/controllers/concerns/stripe.rb", __dir__)
 load File.expand_path("app/controllers/concerns/group.rb", __dir__)
 
 after_initialize do
-  ::Stripe.api_version = "2020-08-27"
+  ::Stripe.api_version = "2024-04-10"
   
   ::Stripe.set_app_info(
     "Discourse Subscriptions",
