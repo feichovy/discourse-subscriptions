@@ -65,6 +65,7 @@ module DiscourseSubscriptions
         metadata = {
           recurring_payment: false,
           group_name: plan[:metadata][:group_name],
+          plan_id: plan[:id],
           system_recurring_interval: plan[:metadata][:system_recurring_interval]
         }.merge!(metadata_user)
 
@@ -106,15 +107,20 @@ module DiscourseSubscriptions
 
         payment_intent = ::Stripe::Checkout::Session.create(payment_params)
 
-        if recurring_plan
+        # Moved to Hooks Controller
+
+        # puts "Stripe Checkout:"
+        # puts payment_intent
+
+        # if recurring_plan
           # Create internal subscription (default: active)
-          InternalSubscription.create!({
-            product_id: plan[:id],
-            plan_id: payment_intent[:payment_intent],
-            user_id: current_user[:id],
-            status: payment_intent[:status]
-          })
-        end
+          # InternalSubscription.create!({
+          #   product_id: plan[:id],
+          #   plan_id: payment_intent[:payment_intent],
+          #   user_id: current_user[:id],
+          #   status: payment_intent[:status]
+          # })
+        # end
 
         render json: {
           status: true,
