@@ -44,25 +44,40 @@ module DiscourseSubscriptions
                         internal_subscription.update_all status: "cancelled", active: false
                       end
               when "payment_intent.succeeded"
-                      puts "Payment Succeeded:"
-                      puts event
+                    puts "Payment Succeeded:"
+                    puts event
                 
-                    #   internal_subscription = InternalSubscription.where(
-                    #     plan_id: event[:data][:object][:id]
-                    #   )
-                      internal_subscription = InternalSubscription.where("plan_id LIKE ?", "%#{event[:data][:object][:id]}%")
-
-                      if internal_subscription.present? && event[:data][:object][:metadata][:recurring_payment] == 'true'
-                        # Next Due Interval
-                        
-                        interval = INTERVALS[event[:data][:object][:metadata][:system_recurring_interval]]
-                        puts "Interval:"
-                        puts interval
-                        puts event[:data][:object][:metadata][:system_recurring_interval]
-                        
-                        next_due = (Time.now.to_i + interval)
-
-                        internal_subscription.update_all status: "succeeded", active: true, next_due: next_due, last_notification: nil
+                    payment_intent = event[:data][:object]
+                    recurring_payment = event[:data][:object][:metadata][:recurring_payment] == 'true'
+                    system_recurring_interval = event[:data][:object][:metadata][:system_recurring_interval]
+                
+                    interval = INTERVALS[system_recurring_interval]
+                    puts "Interval:"
+                    puts interval
+                    puts system_recurring_interval
+                
+                    next_due = Time.now.to_i + interval
+                
+                    internal_subscription = InternalSubscription.find_by(plan_id: "%#{payment_intent[:id]}%")
+                
+                    if internal_subscription.present?
+                        if recurring_payment
+                            internal_subscription.update(status: "succeeded", active: true, next_due: next_due, last_notification: nil)
+                        end
+                    else
+                        if recurring_payment
+                            InternalSubscription.create!(
+                                product_id: payment_intent[:metadata][:plan_id],
+                                plan_id: payment_intent[:id],
+                                user_id: payment_intent[:metadata][:user_id].to_i,
+                                status: payment_intent[:status],
+                                last_notification: nil,
+                                active: true,
+                                next_due: next_due
+                            )
+                        else
+                            # Single payment
+                        end
                     end
 
                     if group = ::Group.find_by_name(event[:data][:object][:metadata][:group_name])
@@ -124,8 +139,8 @@ module DiscourseSubscriptions
                   return render_json_error "customer not found" if !customer
 
                   Subscription.find_by(
-                  customer_id: customer.id,
-                  external_id: event[:data][:object][:id],
+                    customer_id: customer.id,
+                    external_id: event[:data][:object][:id],
                   )&.destroy!
 
                   user = ::User.find(customer.user_id)
