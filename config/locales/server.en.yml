@@ -3,7 +3,7 @@ en:
     internal_subscriptions:
       expired: Your subscription has expired & has been marked as cancelled
       renewal: Your subscription payment is due, click here to pay
-      renewal_url: Your %{package} subscription is due for renewal, your package will be cancelled in 12 hours if no payment is received. If you are interested in continuing your subscription please [Pay Now](%{url}) or alternatively [Pay via Alipay](%{url_cny})
+      renewal_url: Your %{package} subscription is due for renewal. If you are interested in continuing your subscription please [Pay Now](%{url}) or alternatively [Pay via Alipay](%{url_cny}). If you would like to set-up a direct debit please cancel your subscription and choose from our direct debit options on our subscriptions page
     customer_not_found: Customer not found
     card:
       declined: Card Declined
