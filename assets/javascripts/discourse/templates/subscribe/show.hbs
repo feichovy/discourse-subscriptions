@@ -6,6 +6,12 @@
 
     <hr />
 
+    <p>
+      {{html-safe model.product.description}}
+    </p>
+    
+    <hr />
+
     {{#if canPurchase}}
       <PaymentOptions @plans={{model.plans}} @selectedPlan={{selectedPlan}} />
       
