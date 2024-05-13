@@ -90,12 +90,8 @@ module ::Jobs
                 cny_price = cny_price[:unit_amount].to_i
 
                 payment_params_cny = payment_params.merge({
-                  payment_method_options: {
-                    wechat_pay: {
-                      client: 'web'
-                    }
-                  },
-                  payment_method_types: ['wechat_pay', 'alipay'],
+                  payment_method_options: {},
+                  payment_method_types: ['alipay'],
                   line_items: [
                     {
                       price_data: {
