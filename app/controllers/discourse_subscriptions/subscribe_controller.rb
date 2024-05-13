@@ -71,9 +71,11 @@ module DiscourseSubscriptions
 
         currency = payment_method == 'cny' ? 'cny' : SiteSetting.discourse_subscriptions_currency.downcase
         unit_amount = payment_method == 'cny' ? PlanCnyPrice.where(plan_id: plan[:id]).first[:unit_amount].to_i : (plan["unit_amount"] < 1 ? 100 : plan["unit_amount"])
-        payment_method_options = payment_method == 'cny' ? { wechat_pay: { client: 'web' } } : {}
-        payment_method_types = payment_method == 'cny' ? ['wechat_pay', 'alipay'] : ['card', 'link']
-
+        # payment_method_options = payment_method == 'cny' ? { wechat_pay: { client: 'web' } } : {}
+        payment_method_options = {}
+        # payment_method_types = payment_method == 'cny' ? ['wechat_pay', 'alipay'] : ['card', 'link']
+        payment_method_types = payment_method == 'cny' ? ['alipay'] : ['card', 'link']
+        
         payment_params = {
           success_url: "#{Discourse.base_url}/s?t=success",
           cancel_url: "#{Discourse.base_url}/s?t=cancel",
