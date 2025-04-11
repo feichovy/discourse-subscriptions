@@ -8,6 +8,7 @@ export default {
       const siteSettings = container.lookup("service:site-settings");
       const isNavLinkEnabled =
         siteSettings.discourse_subscriptions_extra_nav_subscribe;
+
       if (isNavLinkEnabled) {
         api.addNavigationBarItem({
           name: "subscribe",
@@ -23,7 +24,8 @@ export default {
           href: `/u/${user.username}/billing/subscriptions`,
           content: "Billing",
         });
-       // ✅ 订阅卡片排序逻辑：每月优先，每类按价格升序
+      }
+
       api.onPageChange((url) => {
         if (!url.startsWith("/s")) return;
 
@@ -53,8 +55,7 @@ export default {
 
           const sorted = [...monthly, ...yearly, ...others];
           sorted.forEach(card => container.appendChild(card));
-
-        }, 50); // 延迟确保渲染完成
+        }, 50);
       });
     });
   },
